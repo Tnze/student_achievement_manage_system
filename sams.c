@@ -1,3 +1,7 @@
+/*
+    author: Tnze
+*/
+
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -171,9 +175,23 @@ typedef struct
 } Student;
 
 //选定一个学生
-int choice_student(Student students[])
+int choice_student(Student students[], int len)
 {
-    return 0;
+    printf("Input search key-words: \n");
+    char key_words[32];
+    scanf("%s", key_words);
+    getchar(); //吸收\n
+    for (int i = 0; i < len; i++)
+        if (strstr(students[i].Name, key_words) != NULL || atoi(key_words) == students[i].ID)
+        {
+            printf("Name: %s, ID: %d, Engl: %d, Math: %d, Clag: %d\n"
+                   "If this student is whtch you wanna choice, type 'y': \n",
+                   students[i].Name, students[i].ID, students[i].engl, students[i].math, students[i].clag);
+
+            if (getchar() == 'y')
+                return i;
+        }
+    return -1;
 }
 
 //从文件读取学生信息
@@ -199,6 +217,7 @@ int load_students(Student students[])
     return i;
 }
 
+//写入更改到文件
 void write_data_file(Student students[], int len)
 {
     FILE *data;
@@ -208,12 +227,13 @@ void write_data_file(Student students[], int len)
 
     for (int i = 0; i < len; i++)
     {
-        fprintf(data, "%s %d %d %d %d\n",
-                students[i].Name,
-                students[i].ID,
-                students[i].engl,
-                students[i].math,
-                students[i].clag);
+        if (strcmp(students[i].Name, "removed"))
+            fprintf(data, "%s %d %d %d %d\n",
+                    students[i].Name,
+                    students[i].ID,
+                    students[i].engl,
+                    students[i].math,
+                    students[i].clag);
     }
 
     fclose(data); //close file
@@ -297,29 +317,81 @@ void print_student(Student *s)
     printf("Name: %s, ID: %d, Engl: %d, Math: %d, Clag: %d\n", s->Name, s->ID, s->engl, s->math, s->clag);
 }
 
+void change_information(Student *s)
+{
+    print_student(s);
+    printf(
+        "Please select which information you wanna change: [1-6]\n"
+        "   [1]Name\n"
+        "   [2]ID\n"
+        "   [3]English score\n"
+        "   [4]Math score\n"
+        "   [5]C language score\n"
+        "   [6]cancel\n");
+    switch (read_num())
+    {
+    case 1:
+        printf("Old name is %s, please input new name: ", s->Name);
+        scanf("%s", s->Name);
+        break;
+    case 2:
+        printf("Old ID is %d, please input new ID: ", s->ID);
+        scanf("%d", &s->ID);
+        break;
+    case 3:
+        printf("Old English score is %d, please input new English score: ", s->engl);
+        scanf("%d", &s->engl);
+        break;
+    case 4:
+        printf("Old math score is %d, please input new math score: ", s->math);
+        scanf("%d", &s->math);
+        break;
+    case 5:
+        printf("Old C language score is %d, please input new C language score: ", s->clag);
+        scanf("%d", &s->clag);
+        break;
+    case 6:
+        return;
+    }
+}
+
+double solve_average_score(Student *s)
+{
+    return (s->engl + s->math + s->clag) / 3.0;
+}
+
 //更新记录模式
 void ggxnjilu_mode()
 {
     Student students[2048];
     int len = load_students(students);
+
     for (;;)
     {
         clean_screen();
         printf(
-            "Please type the function you need: [1-3]\n"
+            "Please type the function you need: [1-5]\n"
             "   [1]Change one's information\n"
             "   [2]Sort\n"
             "   [3]Solve one's average score\n"
-            "   [3]Insert student\n"
             "   [4]Remove student\n"
             "   [5]Save and back\n");
 
         switch (read_num())
         {
+        case 1: //Change one's information
+            change_information(&students[choice_student(students, len)]);
+            break;
         case 2:
             quickSort(students, len);
             // bubble(students, len);
-
+            break;
+        case 3:
+            printf("Average score: %.2lf", solve_average_score(&students[choice_student(students, len)]));
+            break;
+        case 5:
+            strcpy(students[choice_student(students, len)].Name, "removed");
+            printf("Remove successed! \n");
             break;
         case 5:
             write_data_file(students, len);
