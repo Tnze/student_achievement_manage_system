@@ -163,8 +163,184 @@ void tsji()
     getchar();
 }
 
+typedef struct
+{
+    char Name[32];
+    int ID;
+    int engl, math, clag;
+} Student;
+
+//选定一个学生
+int choice_student(Student students[])
+{
+    return 0;
+}
+
+//从文件读取学生信息
+int load_students(Student students[])
+{
+    FILE *data;
+    char name[32];
+    int id, engl, math, clag;
+    data = fopen("./data", "rt"); //open data file
+
+    int i = 0;
+    while (EOF != fscanf(data, "%s %d %d %d %d", name, &id, &engl, &math, &clag))
+    {
+        strcpy(students[i].Name, name);
+        students[i].ID = id;
+        students[i].engl = engl;
+        students[i].math = math;
+        students[i].clag = clag;
+        i++;
+    }
+
+    fclose(data); //close file
+    return i;
+}
+
+void write_data_file(Student students[], int len)
+{
+    FILE *data;
+    char name[32];
+    int id, engl, math, clag;
+    data = fopen("./data", "wt"); //open data file
+
+    for (int i = 0; i < len; i++)
+    {
+        fprintf(data, "%s %d %d %d %d\n",
+                students[i].Name,
+                students[i].ID,
+                students[i].engl,
+                students[i].math,
+                students[i].clag);
+    }
+
+    fclose(data); //close file
+}
+
+int if_more_than(Student *s1, Student *s2)
+{
+    int sa1 = (s1->engl + s1->math + s1->clag);
+    int sa2 = (s2->engl + s2->math + s2->clag);
+    if (sa1 == sa2)
+        return s1->ID > s2->ID;
+    else
+        return sa1 > sa2;
+}
+
+int if_less_than(Student *s1, Student *s2)
+{
+    int sa1 = (s1->engl + s1->math + s1->clag);
+    int sa2 = (s2->engl + s2->math + s2->clag);
+    if (sa1 == sa2)
+        return s1->ID < s2->ID;
+    else
+        return sa1 < sa2;
+}
+
+//冒泡排序
+void bubble(Student array[], int len)
+{
+    for (int j = 0; j < len; j++)
+    {
+        int count = 0;
+        for (int i = 1; i < len - j; i++)
+        {
+            if (if_more_than(&array[i - 1], &array[i]))
+            {
+                // swap(array + i - 1, array + i);
+
+                Student t = array[i - 1];
+                array[i - 1] = array[i];
+                array[i] = t;
+
+                count++;
+            }
+        }
+        if (!count)
+            break;
+    }
+}
+
+//快速排序
+void quickSort(Student array[], int len)
+{
+    int i = 0;
+    int j = len - 1;
+    int flag = 0;
+    Student *key = &array[0];
+    while (i != j)
+    {
+        while (j > i)
+        {
+            if (flag ? if_more_than(&array[i], key) : if_less_than(&array[j], key))
+            {
+                // swap(array + i, array + j);
+                Student t = array[j];
+                array[j] = array[i];
+                array[i] = t;
+                break;
+            }
+            flag ? i++ : j--;
+        }
+        flag = !flag;
+    }
+    if (i > 1)
+        quickSort(array, i);
+    if (i < len - 2)
+        quickSort(array + i + 1, len - 1 - i);
+}
+
+void print_student(Student *s)
+{
+    printf("Name: %s, ID: %d, Engl: %d, Math: %d, Clag: %d\n", s->Name, s->ID, s->engl, s->math, s->clag);
+}
+
+//更新记录模式
+void ggxnjilu_mode()
+{
+    Student students[2048];
+    int len = load_students(students);
+    for (;;)
+    {
+        clean_screen();
+        printf(
+            "Please type the function you need: [1-3]\n"
+            "   [1]Change one's information\n"
+            "   [2]Sort\n"
+            "   [3]Solve one's average score\n"
+            "   [3]Insert student\n"
+            "   [4]Remove student\n"
+            "   [5]Save and back\n");
+
+        switch (read_num())
+        {
+        case 2:
+            quickSort(students, len);
+            // bubble(students, len);
+
+            break;
+        case 5:
+            write_data_file(students, len);
+            return;
+        }
+
+        char c;
+        clean_input_buff();
+        getchar();
+    }
+}
+
 int main(void)
 {
+    //create file if not exist
+    FILE *f;
+    if ((f = fopen("./data", "r")) == NULL)
+        fclose(fopen("./data", "w"));
+    else
+        fclose(f);
+    //read cmd
     for (;;)
     {
         clean_screen();
@@ -185,6 +361,7 @@ int main(void)
             iaxpjilu();
             break;
         case 3:
+            ggxnjilu_mode();
             break;
         case 4:
             tsji();
