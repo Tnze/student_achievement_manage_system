@@ -45,7 +45,7 @@ void iaxpjilu()
     {
         clean_screen();
         printf(
-            "Please type the function you need: [1-3]\n"
+            "Please type the function you need:\n"
             "   [1]Search student by Name or ID\n"
             "   [2]Print max score students\n"
             "   [3]Print non-pass students\n"
@@ -174,42 +174,62 @@ typedef struct
     int engl, math, clag;
 } Student;
 
+//链表节点
+typedef struct list
+{
+    Student value;
+    struct list *next;
+} student_list;
+
 //选定一个学生
-int choice_student(Student students[], int len)
+int choice_student(student_list *students)
 {
     printf("Input search key-words: \n");
     char key_words[32];
     scanf("%s", key_words);
-    getchar(); //吸收\n
-    for (int i = 0; i < len; i++)
-        if (strstr(students[i].Name, key_words) != NULL || atoi(key_words) == students[i].ID)
+    getchar(); //吸收'\n'
+    int i = 0;
+    while (students->next != NULL)
+    {
+        students = students->next;
+        if (strstr(students->value.Name, key_words) != NULL || atoi(key_words) == students->value.ID)
         {
             printf("Name: %s, ID: %d, Engl: %d, Math: %d, Clag: %d\n"
                    "If this student is whtch you wanna choice, type 'y': \n",
-                   students[i].Name, students[i].ID, students[i].engl, students[i].math, students[i].clag);
+                   students->value.Name, students->value.ID, students->value.engl, students->value.math, students->value.clag);
 
             if (getchar() == 'y')
                 return i;
         }
+        i++;
+    }
     return -1;
 }
 
 //从文件读取学生信息
-int load_students(Student students[])
+int load_students(student_list *students)
 {
     FILE *data;
     char name[32];
     int id, engl, math, clag;
     data = fopen("./data", "rt"); //open data file
 
+    student_list *end_node = students;
+
     int i = 0;
     while (EOF != fscanf(data, "%s %d %d %d %d", name, &id, &engl, &math, &clag))
     {
-        strcpy(students[i].Name, name);
-        students[i].ID = id;
-        students[i].engl = engl;
-        students[i].math = math;
-        students[i].clag = clag;
+        student_list *n = malloc(sizeof(student_list));
+        strcpy(n->value.Name, name);
+        n->value.ID = id;
+        n->value.engl = engl;
+        n->value.math = math;
+        n->value.clag = clag;
+
+        n->next = NULL;
+        end_node->next = n;
+        end_node = n;
+
         i++;
     }
 
@@ -218,22 +238,23 @@ int load_students(Student students[])
 }
 
 //写入更改到文件
-void write_data_file(Student students[], int len)
+void write_data_file(student_list *students)
 {
     FILE *data;
     char name[32];
     int id, engl, math, clag;
     data = fopen("./data", "wt"); //open data file
 
-    for (int i = 0; i < len; i++)
+    while (students->next != NULL)
     {
-        if (strcmp(students[i].Name, "removed"))
+        students = students->next;
+        if (strcmp(students->value.Name, "removed"))
             fprintf(data, "%s %d %d %d %d\n",
-                    students[i].Name,
-                    students[i].ID,
-                    students[i].engl,
-                    students[i].math,
-                    students[i].clag);
+                    students->value.Name,
+                    students->value.ID,
+                    students->value.engl,
+                    students->value.math,
+                    students->value.clag);
     }
 
     fclose(data); //close file
@@ -259,58 +280,29 @@ int if_less_than(Student *s1, Student *s2)
         return sa1 < sa2;
 }
 
-//冒泡排序
-void bubble(Student array[], int len)
-{
-    for (int j = 0; j < len; j++)
-    {
-        int count = 0;
-        for (int i = 1; i < len - j; i++)
-        {
-            if (if_more_than(&array[i - 1], &array[i]))
-            {
-                // swap(array + i - 1, array + i);
+// //冒泡排序
+// void bubble(student_list *array)
+// {
+//     for (int j = 0; j < len; j++)
+//     {
+//         int count = 0;
+//         for (int i = 1; i < len - j; i++)
+//         {
+//             if (if_more_than(&array[i - 1], &array[i]))
+//             {
+//                 // swap(array + i - 1, array + i);
 
-                Student t = array[i - 1];
-                array[i - 1] = array[i];
-                array[i] = t;
+//                 Student t = array[i - 1];
+//                 array[i - 1] = array[i];
+//                 array[i] = t;
 
-                count++;
-            }
-        }
-        if (!count)
-            break;
-    }
-}
-
-//快速排序
-void quickSort(Student array[], int len)
-{
-    int i = 0;
-    int j = len - 1;
-    int flag = 0;
-    Student *key = &array[0];
-    while (i != j)
-    {
-        while (j > i)
-        {
-            if (flag ? if_more_than(&array[i], key) : if_less_than(&array[j], key))
-            {
-                // swap(array + i, array + j);
-                Student t = array[j];
-                array[j] = array[i];
-                array[i] = t;
-                break;
-            }
-            flag ? i++ : j--;
-        }
-        flag = !flag;
-    }
-    if (i > 1)
-        quickSort(array, i);
-    if (i < len - 2)
-        quickSort(array + i + 1, len - 1 - i);
-}
+//                 count++;
+//             }
+//         }
+//         if (!count)
+//             break;
+//     }
+// }
 
 void print_student(Student *s)
 {
@@ -321,7 +313,7 @@ void change_information(Student *s)
 {
     print_student(s);
     printf(
-        "Please select which information you wanna change: [1-6]\n"
+        "Please select which information you wanna change:\n"
         "   [1]Name\n"
         "   [2]ID\n"
         "   [3]English score\n"
@@ -360,41 +352,64 @@ double solve_average_score(Student *s)
     return (s->engl + s->math + s->clag) / 3.0;
 }
 
+Student *getbyIndex(student_list *list, int i)
+{
+    for (int j = 0; j < i; j++)
+        list = list->next;
+    return &list->value;
+}
+
 //更新记录模式
 void ggxnjilu_mode()
 {
-    Student students[2048];
-    int len = load_students(students);
+    student_list students;
+    students.next = NULL;
+    int len = load_students(&students);
 
     for (;;)
     {
         clean_screen();
         printf(
-            "Please type the function you need: [1-5]\n"
+            "Please type the function you need:\n"
             "   [1]Change one's information\n"
             "   [2]Sort\n"
             "   [3]Solve one's average score\n"
             "   [4]Remove student\n"
             "   [5]Save and back\n");
 
+        int target = -1;
+
         switch (read_num())
         {
         case 1: //Change one's information
-            change_information(&students[choice_student(students, len)]);
+            target = choice_student(&students);
+            if (target > 0)
+                change_information(getbyIndex(&students, target));
+            else
+                printf("Didn't choice an student!");
             break;
         case 2:
-            quickSort(students, len);
-            // bubble(students, len);
+            // bubble(&students);
             break;
         case 3:
-            printf("Average score: %.2lf", solve_average_score(&students[choice_student(students, len)]));
+            target = choice_student(&students);
+            if (target > 0)
+                printf("Average score: %.2lf", solve_average_score(getbyIndex(&students, target)));
+            else
+                printf("Didn't choice an student!");
+            break;
+        case 4:
+            target = choice_student(&students);
+            if (target > 0)
+            {
+                strcpy(getbyIndex(&students, target)->Name, "removed");
+                printf("Remove successed! \n");
+            }
+            else
+                printf("Didn't choice an student!");
             break;
         case 5:
-            strcpy(students[choice_student(students, len)].Name, "removed");
-            printf("Remove successed! \n");
-            break;
-        case 5:
-            write_data_file(students, len);
+            write_data_file(&students);
             return;
         }
 
@@ -412,12 +427,13 @@ int main(void)
         fclose(fopen("./data", "w"));
     else
         fclose(f);
+
     //read cmd
     for (;;)
     {
         clean_screen();
         printf(
-            "Please type the mode you need: [1-6]\n"
+            "Please type the mode you need:\n"
             "   [1]Input mode\n"
             "   [2]Search mode\n"
             "   [3]Update mode\n"
@@ -427,19 +443,19 @@ int main(void)
         switch (read_num())
         {
         case 1:
-            uurujilu();
+            uurujilu(); //输入记录
             break;
         case 2:
-            iaxpjilu();
+            iaxpjilu(); //查询记录
             break;
         case 3:
-            ggxnjilu_mode();
+            ggxnjilu_mode(); //更新记录
             break;
         case 4:
-            tsji();
+            tsji(); //统计
             break;
         case 5:
-            uuiujilu();
+            uuiujilu(); //输出记录
             break;
         case 6: //Exit
             clean_screen();
