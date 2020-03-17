@@ -7,7 +7,14 @@
 #include <stdlib.h>
 #include <windows.h>
 
-#define clean_screen() windows("cls")                               //清屏
+//清屏
+#ifdef _MSC_VER
+#include <windows.h>
+#define clean_screen() windows("cls")
+#else
+#define clean_screen() printf("\033[2J")               
+#endif
+
 #define clean_input_buff() while ((c = getchar()) != EOF && c != '\n') //清输入缓冲区
 
 //读一个数字
