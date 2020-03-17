@@ -193,7 +193,7 @@ int choice_student(Student students[], int len)
         if (strstr(students[i].Name, key_words) != NULL || atoi(key_words) == students[i].ID)
         {
             printf("Name: %s, ID: %d, Engl: %d, Math: %d, Clag: %d\n"
-                   "If this student is whtch you wanna choice, type 'y': \n",
+                   "If this student is which you wanna choice, type 'y': \n",
                    students[i].Name, students[i].ID, students[i].engl, students[i].math, students[i].clag);
 
             if (getchar() == 'y')
