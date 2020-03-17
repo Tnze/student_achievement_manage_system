@@ -5,8 +5,16 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <windows.h>
 
-#define clean_screen() printf("\033[2J")                               //清屏
+//清屏
+#ifdef _MSC_VER
+#include <windows.h>
+#define clean_screen() windows("cls")
+#else
+#define clean_screen() printf("\033[2J")               
+#endif
+
 #define clean_input_buff() while ((c = getchar()) != EOF && c != '\n') //清输入缓冲区
 
 //读一个数字
@@ -392,12 +400,9 @@ void ggxnjilu_mode()
         case 5:
             strcpy(students[choice_student(students, len)].Name, "removed");
             printf("Remove successed! \n");
-            break;
-        case 5:
             write_data_file(students, len);
             return;
         }
-
         char c;
         clean_input_buff();
         getchar();
